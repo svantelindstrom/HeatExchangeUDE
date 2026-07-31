@@ -8,8 +8,11 @@ function pVecBuilder(;
     T_h_in = 90.0, #Arbitrarily chosen value
     T_c_in = 20.0, #Arbitrarily chosen value
     r = 0.025, #Arbitrarily chosen value
-    N = 100, #Placeholder value (may need changing in future)
-    L = 20.0 #Placeholder value (may need changing in future)
+    N = 10, #Placeholder value (may need changing in future)
+    L = 20.0, #Placeholder value (may need changing in future)
+    final_time=3e6,
+    time_points=30,
+    τ=final_time
 )
 return (
     r = r,
@@ -25,6 +28,9 @@ return (
     N = N, #Placeholder value (may need changing in future)
     L = L, #Placeholder value (may need changing in future)
     dx = L / N,
+    final_time = final_time,
+    time_points = time_points,
+    dt = final_time/time_points,
     T_h_in = T_h_in, 
     T_c_in = T_c_in,
     R0 = R0,
@@ -32,7 +38,8 @@ return (
     R = R,
     model = model,
     θ = θ,
-    st = st
+    st = st,
+    τ=τ
 )
 
 end
