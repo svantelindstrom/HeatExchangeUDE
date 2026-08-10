@@ -26,7 +26,9 @@ function loss_function(p_base,u0,tspan,tsteps,ground_truth_data)
 
         predictions = Array(sol)
 
-        loss = mean(abs2.(predictions.-ground_truth_data))
+        temp_predictions = predictions[1:2*p_base.N,:]
+
+        loss = mean(abs2.(temp_predictions.-ground_truth_data))
 
         return loss
     end

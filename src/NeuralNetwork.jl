@@ -18,10 +18,8 @@ function define_NN(hidden_layers::Int,nodes_per_layer::Int;input_dims::Int = 3,o
     return Chain(layers...)
 end
 
-function R_NN(t,Th,Tc,p)
-    states = vcat(reshape(Th, 1, :), reshape(Tc, 1, :))
-    t_arr = [t for _ in 1:1, _ in 1:length(Tc)]
-    input_NN = vcat(states, t_arr)
+function R_NN(Th,Tc,R,p)
+    input_NN = vcat(reshape(Th, 1, :), reshape(Tc, 1, :),reshape(R,1, :))
 
     R_pred,_ = p.model(input_NN,p.θ,p.st)
     

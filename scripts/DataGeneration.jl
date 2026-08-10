@@ -4,13 +4,13 @@ using HeatExchangeUDE
 using JLD2
 using DrWatson
 
-function Kern_Seaton(t,Th,Tc,p)
+function Kern_Seaton(t,p)
     R = p.R0*(1-exp(-p.beta*t))
     return R
 end
 
 function steady_state()
-    no_fouling(t,Th,Tc,p) = 0.0
+    no_fouling(t,p) = 0.0
 
     #Parameters to find steady state operation with no fouling
     p_steady = pVecBuilder(R = no_fouling,τ=1.0)

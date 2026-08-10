@@ -47,7 +47,12 @@ function run_training()
     #Data Loading 
 
     #Load Steady State data 
-    u0,_,_ = load_steady()
+    T0,_,_ = load_steady()
+
+    #Initial fouling is 0:
+    R0 = fill(0.0,p.N)
+
+    u0 = vcat(T0,R0)
 
     #Load Ground Truth Data
     Th,Tc,tsteps,_,_,tspan = load_true()
