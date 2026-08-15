@@ -22,7 +22,7 @@ function save_true(u_true,t_true,N,L)
         "L"=>L
     )
 
-    file_path = datadir("exp_raw","ground_truth_data.jld2")
+    file_path = datadir("exp_raw","ground_truth_data_extended.jld2")
     safesave(file_path,ground_truth_dict)
 end
 

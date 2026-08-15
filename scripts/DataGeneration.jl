@@ -30,7 +30,7 @@ function true_dataset(solution_steady)
     u_steady,_,_ = solution_steady
     u0_true = u_steady[:,end]
 
-    p_true = pVecBuilder(R = Kern_Seaton,τ=1.0)
+    p_true = pVecBuilder(R = Kern_Seaton,τ=1.0,final_time = 1.5e7,time_points = 300)
     tspan_true = (0.0, p_true.final_time)
 
     prob_true = ODEProblem(EnergyBalance!,u0_true,tspan_true,p_true)
