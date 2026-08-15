@@ -12,7 +12,10 @@ function pVecBuilder(;
     L = 20.0, #Placeholder value (may need changing in future)
     final_time=3e6,
     time_points=30,
-    τ=final_time
+    τ=final_time,
+    ϵ = 1e-3,
+    Th_max = nothing,
+    Tc_max = nothing
 )
 return (
     r = r,
@@ -39,7 +42,12 @@ return (
     model = model,
     θ = θ,
     st = st,
-    τ=τ
+    τ=τ,
+    ϵ=ϵ,
+    R_max = R0*(1-exp(-beta*final_time)),
+    Th_max = Th_max,
+    Tc_max = Tc_max,
+    dR_max = R0*beta
 )
 
 end

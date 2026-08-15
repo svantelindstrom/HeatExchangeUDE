@@ -36,12 +36,19 @@ function run_training()
     #Defining Neural Network
     NN,θ,st = setup_NN(hidden_layers,nodes_per_layer)
 
+    #Load Ground Truth Data
+    Th,Tc,tsteps,_,_,tspan = load_true()
+
+    ground_truth_data = vcat(Th,Tc)
+
     #Constructing parameter tuple
     p = pVecBuilder(
         R = R_NN,
         model = NN,
         θ=θ,
         st=st,
+        Th_max = maximum(Th),
+        Tc_max = maximum(Tc)
     )
     
     #Data Loading 
@@ -54,13 +61,8 @@ function run_training()
 
     u0 = vcat(T0,R0)
 
-    #Load Ground Truth Data
-    Th,Tc,tsteps,_,_,tspan = load_true()
-
-    ground_truth_data = vcat(Th,Tc)
-
     #Defining the closure for loss to be able to call loss with θ as the only argument 
     loss_evaluation = loss_function(p,u0,tspan,tsteps,ground_truth_data)
-    results = LossOptim(loss_evaluation,p,max_iters_adam=5,max_iters_BFGS=5)
+    results = LossOptim(loss_evaluation,p,max_iters_adam=100,max_iters_BFGS=50)
     save_NN_results(results)
 end

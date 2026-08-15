@@ -4,7 +4,7 @@ using JLD2
 using Statistics
 using HeatExchangeUDE
 using DifferentialEquations
-using GLMakie: Figure, Axis, Slider, @lift, lines!, text!, axislegend
+using GLMakie: Figure, Axis, Slider, @lift, lines!, text!, axislegend,scatter!
 
 #Plot for u0 of the synthetic dataset
 function steady_state_plot()
@@ -64,7 +64,8 @@ end
 function loss_plot()
     _,_,LossHistory = load_NN_results()
 
-    plot(LossHistory)
+    p = plot(log10.(LossHistory),legend = false,title="Loss",xlabel="epochs",ylabel="Loss")
+    display(p)
 end
 
 function trained_model_heatmap()
@@ -79,6 +80,10 @@ function trained_model_heatmap()
 
     Th_error = 100*abs.(Th_model.-Th_ground_truth)./(Th_ground_truth.+273.15)
     Tc_error = 100*abs.(Tc_model.-Tc_ground_truth)./(Tc_ground_truth.+273.15)
+
+    error_mean = mean(vcat(Th_error,Tc_error))
+    accuracy = 100-error_mean
+    println("Accuracy: ",accuracy,"%")
 
     Lvec = range(0,L,length=N)
 
@@ -131,12 +136,15 @@ function interactive_temperature_profile(Th_model, Tc_model, Th_truth, Tc_truth,
     
     current_time = @lift("Time: $(round(tsteps[$time_index], digits=2)) s")
 
-    # 6. Plot the lifted data (Solid for truth, Dashed for model)
-    lines!(ax, Lvec, Th_truth_plot, color = :red, label = "Hot (Truth)", linewidth = 3)
-    lines!(ax, Lvec, Th_model_plot, color = :red, linestyle = :dash, label = "Hot (Model)", linewidth = 3)
+    # 6. Plot the lifted data
+    # Plot true data first as semi-transparent lines (0.4 opacity)
+    # Using a slightly thicker linewidth helps it stand out behind the dots
+    lines!(ax, Lvec, Th_truth_plot, color = (:red, 0.4), label = "Hot (Truth)", linewidth = 4)
+    lines!(ax, Lvec, Tc_truth_plot, color = (:blue, 0.4), label = "Cold (Truth)", linewidth = 4)
     
-    lines!(ax, Lvec, Tc_truth_plot, color = :blue, label = "Cold (Truth)", linewidth = 3)
-    lines!(ax, Lvec, Tc_model_plot, color = :blue, linestyle = :dash, label = "Cold (Model)", linewidth = 3)
+    # Plot predicted data as solid large dots using scatter!
+    scatter!(ax, Lvec, Th_model_plot, color = :red, markersize = 14, label = "Hot (Model)")
+    scatter!(ax, Lvec, Tc_model_plot, color = :blue, markersize = 14, label = "Cold (Model)")
     
     # Add dynamic text for the time and a legend
     text!(ax, current_time, position = (Lvec[end]*0.7, maximum(Th_truth)*0.9))
@@ -162,7 +170,9 @@ function UDE_predict(θ,tsteps)
     #Load Steady State Data
     path = datadir("exp_raw","steady_state_data.jld2")
     data = load(path)
-    u0 = data["u0"]
+    T0 = data["u0"]
+
+    Th,Tc,_,_,_,_ = load_true()
 
     #Define Neural Network
     hidden_layers = 1
@@ -175,10 +185,15 @@ function UDE_predict(θ,tsteps)
         model=NN,
         θ=θ,
         st=st,
-        τ=1.0
+        τ=1.0,
+        Th_max = maximum(Th),
+        Tc_max = maximum(Tc)
     )
 
     tspan = (0,p.final_time)
+
+    R0 = fill(0.0,p.N)
+    u0 = vcat(T0,R0)
 
     prob = ODEProblem(EnergyBalance!,u0,tspan,p)
     sol = solve(prob,Rodas5P(),saveat=tsteps)

@@ -1,4 +1,4 @@
-using Lux, StableRNGs, ComponentArrays
+using Lux, StableRNGs, ComponentArrays,NNlib
 
 #Create NeuralNetwork definition based on size defined by modeltraining.jl
 function define_NN(hidden_layers::Int,nodes_per_layer::Int;input_dims::Int = 3,output_dims::Int = 1)
@@ -19,11 +19,22 @@ function define_NN(hidden_layers::Int,nodes_per_layer::Int;input_dims::Int = 3,o
 end
 
 function R_NN(Th,Tc,R,p)
-    input_NN = vcat(reshape(Th, 1, :), reshape(Tc, 1, :),reshape(R,1, :))
+    norm_Th = Th./p.Th_max
+    norm_Tc = Tc./p.Tc_max
+    norm_R = R./p.R_max 
 
-    R_pred,_ = p.model(input_NN,p.θ,p.st)
+    input_NN = vcat(reshape(norm_Th, 1, :), reshape(norm_Tc, 1, :),reshape(norm_R,1, :))
+
+    dR_pred,_ = p.model(input_NN,p.θ,p.st)
+
+    dR_pred = vec(dR_pred)
     
-    return vec(R_pred)
+    pos_dR = softplus.(dR_pred)
+    neg_dR = softplus.(-dR_pred)
+
+    dR_pred = pos_dR .- neg_dR.*tanh.(max.(0.0,norm_R)./p.ϵ)
+    
+    return vec(dR_pred.*p.dR_max)
 end
 
 function setup_NN(hidden_layers::Int,nodes_per_layer::Int)
