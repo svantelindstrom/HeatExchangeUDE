@@ -1,6 +1,24 @@
 using JLD2, DrWatson
 
-function save_NN_results(results)
+# ---Data Saving functions---
+function save_NN_prediction(Th,Tc,filename)
+    trained_data = Dict(
+        "Tc" => Tc,
+        "Th" => Th
+    )
+
+    file = string(filename,".jld2")
+
+    log_file = datadir("sims","NN_prediction_save_history.txt")
+    open(log_file,"a") do io
+        println(io,file)
+    end
+
+    file_path = datadir("sims",file)
+    safesave(file_path,trained_data)
+end
+
+function save_NN_results(results, filename)
     adam, LBFGS , LossHistory = results
     NN_result_dict = Dict(
         "Adam Results" => adam,
@@ -8,11 +26,18 @@ function save_NN_results(results)
         "Loss History" => LossHistory
     )
 
-    file_path = datadir("sims","trained_model_prediction.jld2")
+    file = string(filename,".jld2")
+
+    log_file = datadir("sims","NN_results_save_history.txt")
+    open(log_file,"a") do io
+        println(io,file)
+    end
+
+    file_path = datadir("sims",file)
     safesave(file_path,NN_result_dict)
 end
 
-function save_true(u_true,t_true,N,L)
+function save_true(u_true,t_true,N,L,filename)
     ground_truth_dict = Dict(
         "Th" => u_true[1:N,:],
         "Tc" => u_true[N+1:2*N,:],
@@ -22,11 +47,19 @@ function save_true(u_true,t_true,N,L)
         "L"=>L
     )
 
-    file_path = datadir("exp_raw","ground_truth_data_extended.jld2")
+    file = string(filename,".jld2")
+
+    log_file =  datadir("exp_raw","ground_truth_save_history.txt")
+    open(log_file,"a") do io
+        println(io,file)
+    end
+
+    file_path = datadir("exp_raw",file)
+
     safesave(file_path,ground_truth_dict)
 end
 
-function save_steady(solution_steady)
+function save_steady(solution_steady,filename)
     u_steady,N,L = solution_steady
     u0 = u_steady[:,end]
     steady_dict = Dict(
@@ -35,14 +68,27 @@ function save_steady(solution_steady)
         "L"=>L
     )
     
-    file_path = datadir("exp_raw","steady_state_data.jld2")
+    file = string(filename,".jld2")
+
+    log_file = datadir("exp_raw","steady_state_save_history.txt")
+    open(log_file,"a") do io
+        println(io,file)
+    end
+
+    file_path = datadir("exp_raw",file)
     safesave(file_path,steady_dict)
 end
 
-function load_steady()
-    steady_state_path = datadir("exp_raw","steady_state_data.jld2")
-    data = load(steady_state_path)
-    
+# ---Data Loading functions---
+
+#Steady State Solution - u0
+
+#Loading a specific file
+function load_steady(filename::AbstractString)
+    file = string(filename,".jld2")
+    file_path = datadir("exp_raw",file)
+    data = load(file_path)
+
     u0 = data["u0"]
     L = data["L"]
     N = data["N"]
@@ -50,9 +96,22 @@ function load_steady()
     return u0,L,N
 end
 
-function load_true()
-    ground_truth_path = datadir("exp_raw","ground_truth_data.jld2")
-    data = load(ground_truth_path)
+#Loading the most recent file
+function load_steady()
+    log_file = datadir("exp_raw","steady_state_save_history.txt")
+    most_recent_file = readlines(log_file)[end]
+    base_name = replace(most_recent_file,".jld2"=>"")
+
+    return load_steady(base_name)
+end
+
+#Ground Truth Data 
+
+#Loading a specific file
+function load_true(filename::AbstractString)
+    file = string(filename,".jld2")
+    file_path = datadir("exp_raw",file)
+    data = load(file_path)
     
     Th = data["Th"]
     Tc = data["Tc"]
@@ -64,9 +123,22 @@ function load_true()
     return Th,Tc,tsteps,N,L,tspan
 end
 
-function load_NN_results()
-    trained_model_path = datadir("sims","trained_model_prediction.jld2")
-    data = load(trained_model_path)
+#Loading the most recent file
+function load_true()
+    log_file = datadir("exp_raw","ground_truth_save_history.txt")
+    most_recent_file = readlines(log_file)[end]
+    base_name = replace(most_recent_file,".jld2"=>"")
+
+    return load_true(base_name)
+end
+
+#Weights and Loss History
+
+#Loading a specific file
+function load_NN_results(filename::AbstractString)
+    file = string(filename,".jld2")
+    file_path = datadir("sims",file)
+    data = load(file_path)
 
     adam = data["Adam Results"]
     LBFGS = data["LBFGS"]
@@ -75,11 +147,33 @@ function load_NN_results()
     return adam,LBFGS,LossHistory
 end
 
-function load_NN_prediction()
-    model_prediction_path = datadir("sims","trained_data_temps.jld2")
-    data = load(model_prediction_path)
+#Loading the most recent file
+function load_NN_results()
+    log_file = datadir("sims","NN_results_save_history.txt")
+    most_recent_file = readlines(log_file)[end]
+    base_name = replace(most_recent_file,".jld2"=>"")
+
+    return load_NN_results(base_name)
+end
+
+#Predicted temperatures
+
+#Loading a specific file
+function load_NN_prediction(filename::AbstractString)
+    file = string(filename,".jld2")
+    file_path = datadir("sims",file)
+    data = load(file_path)
 
     Th = data["Th"]
     Tc = data["Tc"]
     return Th,Tc
+end
+
+#Loading the most recent file
+function load_NN_prediction()
+    log_file = datadir("sims","NN_prediction_save_history.txt")
+    most_recent_file = readlines(log_file)[end]
+    base_name = replace(most_recent_file,".jld2"=>"")
+
+    return load_NN_prediction(base_name)
 end
