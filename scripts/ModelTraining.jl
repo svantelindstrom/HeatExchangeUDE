@@ -37,7 +37,7 @@ function run_training()
     NN,θ,st = setup_NN(hidden_layers,nodes_per_layer)
 
     #Load Ground Truth Data
-    Th,Tc,tsteps,_,_,tspan = load_true()
+    Th,Tc,tsteps,_,_,tspan = load_true("short_training_set")
 
     ground_truth_data = vcat(Th,Tc)
 
@@ -64,5 +64,5 @@ function run_training()
     #Defining the closure for loss to be able to call loss with θ as the only argument 
     loss_evaluation = loss_function(p,u0,tspan,tsteps,ground_truth_data)
     results = LossOptim(loss_evaluation,p,max_iters_adam=100,max_iters_BFGS=50)
-    save_NN_results(results)
+    save_NN_results(results,"short_training_params")
 end

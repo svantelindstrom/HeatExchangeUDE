@@ -68,23 +68,7 @@ function loss_plot()
     display(p)
 end
 
-function trained_model_heatmap()
-    Th_ground_truth,Tc_ground_truth,tsteps,N,L,_ = load_true()
-
-    _,optim_params,_ = load_NN_results()
-
-    optim_solution = UDE_predict(optim_params,tsteps)
-
-    Th_model = optim_solution[1:N,:]
-    Tc_model = optim_solution[N+1:2*N,:]
-
-    Th_error = 100*abs.(Th_model.-Th_ground_truth)./(Th_ground_truth.+273.15)
-    Tc_error = 100*abs.(Tc_model.-Tc_ground_truth)./(Tc_ground_truth.+273.15)
-
-    error_mean = mean(vcat(Th_error,Tc_error))
-    accuracy = 100-error_mean
-    println("Accuracy: ",accuracy,"%")
-
+function trained_model_heatmap(Th_error,Tc_error,tsteps,N,L)
     Lvec = range(0,L,length=N)
 
     #Transpose the error for plotting 
@@ -101,14 +85,20 @@ function trained_model_heatmap()
 
     plot_path = plotsdir("error_heatmaps.png")
     savefig(p,plot_path)
+end
 
-    data_path = datadir("sims","trained_data_temps.jld2")
-    trained_data = Dict(
-        "Tc" => Tc_model,
-        "Th" => Th_model
-    )
-    safesave(data_path,trained_data)
+function training_vs_test_plot(spacial_avg_errors,test_tsteps)
+    _,_,training_tsteps,_,_,_ = load_true("ground_truth_data")
+    training_end = training_tsteps[end]
 
+    test_end = test_tsteps[end]
+    middle_of_test = (test_end+training_end)/2
+
+    p=plot(test_tsteps,spacial_avg_errors,legend = false,title="Prediction Error in Training and Testing",xlabel="time(s)",ylabel="error(%)")
+    vline!(p,[training_end])
+    annotate!(p,[training_end/2],maximum(spacial_avg_errors),text("Training Data",10, :blue,:center))
+    annotate!(p,[middle_of_test],maximum(spacial_avg_errors),text("Test Data",10, :red,:center))
+    display(p)
 end
 
 function interactive_temperature_profile(Th_model, Tc_model, Th_truth, Tc_truth, Lvec, tsteps)
@@ -153,7 +143,7 @@ function interactive_temperature_profile(Th_model, Tc_model, Th_truth, Tc_truth,
     # 7. Launch the interactive window
     display(fig)
 end
-
+#=
 function run_interactive_plot()
     Th_ground_truth,Tc_ground_truth,tsteps,N,L,_ = load_true()
 
@@ -164,38 +154,4 @@ function run_interactive_plot()
     interactive_temperature_profile(Th_model,Tc_model,Th_ground_truth,Tc_ground_truth,Lvec,tsteps)
 
 end
-
-function UDE_predict(θ,tsteps)
-
-    #Load Steady State Data
-    path = datadir("exp_raw","steady_state_data.jld2")
-    data = load(path)
-    T0 = data["u0"]
-
-    Th,Tc,_,_,_,_ = load_true()
-
-    #Define Neural Network
-    hidden_layers = 1
-    nodes_per_layer = 16
-    NN,_,st = setup_NN(hidden_layers,nodes_per_layer)
-
-    #Build Parameter Vector
-    p = pVecBuilder(
-        R=R_NN,
-        model=NN,
-        θ=θ,
-        st=st,
-        τ=1.0,
-        Th_max = maximum(Th),
-        Tc_max = maximum(Tc)
-    )
-
-    tspan = (0,p.final_time)
-
-    R0 = fill(0.0,p.N)
-    u0 = vcat(T0,R0)
-
-    prob = ODEProblem(EnergyBalance!,u0,tspan,p)
-    sol = solve(prob,Rodas5P(),saveat=tsteps)
-    return sol
-end
+=#

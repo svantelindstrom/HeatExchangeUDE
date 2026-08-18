@@ -25,12 +25,12 @@ function steady_state()
     return (steady_sol_arr,p_steady.N,p_steady.L)
 end
 
-function true_dataset(solution_steady)
+function true_dataset(solution_steady,prop_train)
     #Constructing the ground truth dataset
     u_steady,_,_ = solution_steady
     u0_true = u_steady[:,end]
 
-    p_true = pVecBuilder(R = Kern_Seaton,τ=1.0,final_time = 1.5e7,time_points = 300)
+    p_true = pVecBuilder(R = Kern_Seaton,τ=1.0,final_time = 2e6*prop_train,time_points = 300*prop_train)
     tspan_true = (0.0, p_true.final_time)
 
     prob_true = ODEProblem(EnergyBalance!,u0_true,tspan_true,p_true)
@@ -42,13 +42,24 @@ function true_dataset(solution_steady)
     return u_true, t_true,p_true.N,p_true.L
 end
 
-function GenerateDataset()
+function GenerateDataset(filename;prop_train::Float64=1.0)
     solution_steady = steady_state()
-    u_true,t_true,N,L = true_dataset(solution_steady)
-    save_steady(solution_steady)
-    save_true(u_true,t_true,N,L)
+    u_true,t_true,N,L = true_dataset(solution_steady,prop_train)
+    save_steady(solution_steady,"steady_state_data")
+    save_true(u_true,t_true,N,L,filename)
 end
 
+function GenerateTrainingTestData()
+    proportion_train = 0.8
+    train_name = "short_training_set"
+    test_name = "short_test_set"
+
+    #Generate Training Data
+    GenerateDataset(train_name,prop_train=proportion_train)
+
+    #Generate Test Data
+    GenerateDataset(test_name)
+end
 
 
 
