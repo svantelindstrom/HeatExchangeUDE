@@ -15,7 +15,9 @@ function pVecBuilder(;
     τ=final_time,
     ϵ = 1e-3,
     Th_max = nothing,
-    Tc_max = nothing
+    Tc_max = nothing,
+    δ = 1.0,
+    λ = 0.0
 )
 return (
     r = r,
@@ -47,7 +49,9 @@ return (
     R_max = R0*(1-exp(-beta*final_time)),
     Th_max = Th_max,
     Tc_max = Tc_max,
-    dR_max = R0*beta
+    dR_max = R0*beta,
+    δ = δ,
+    λ = λ
 )
 
 end

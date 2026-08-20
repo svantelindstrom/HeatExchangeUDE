@@ -8,7 +8,7 @@ function run_prediction()
     Tc_model = optim_solution[N+1:2*N,:]
     Lvec = range(0,L,N)
     
-    save_NN_prediction(Th_model,Tc_model,"trained_model_prediction_test_data")
+    save_NN_prediction(Th_model,Tc_model,"1.0_noisy_prediction_test_data")
 
     Th_error,Tc_error,accuracy,spacial_avg_errors = prediction_error(Th_ground_truth,Tc_ground_truth,Th_model,Tc_model,tsteps)
     

@@ -36,20 +36,19 @@ function ground_truth_gif()
 
         days_passed = round(t_current/(24*3600),digits=1)
 
-        plot(x,Th_current,
+        Plots.scatter(x,Th_current,
             label="Hot Fluid (Th)", 
             color=:red,
-            linewidth=2,
             xlabel="Distance (m)", 
             ylabel="Temperature (°C)",
             ylim=(Tc_in, Th_in), 
             title="Heat Exchanger Fouling: Day $days_passed",
             legend=:right)
 
-        plot!(x, Tc_current, 
+        Plots.scatter!(x, Tc_current, 
             label="Cold Fluid (Tc)",
-            color=:blue,
-            linewidth=2)
+            color=:blue
+            )
 
 
     end
@@ -88,7 +87,7 @@ function trained_model_heatmap(Th_error,Tc_error,tsteps,N,L)
 end
 
 function training_vs_test_plot(spacial_avg_errors,test_tsteps)
-    _,_,training_tsteps,_,_,_ = load_true("ground_truth_data")
+    _,_,training_tsteps,_,_,_ = load_true("1.0_noisy_training_set")
     training_end = training_tsteps[end]
 
     test_end = test_tsteps[end]
