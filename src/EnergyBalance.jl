@@ -1,3 +1,23 @@
+"""
+    EnergyBalance!(du,u,p,t)
+
+Function defining the energy balance equation used to model the heat exchanger.
+
+This function acts as the engine behind all calculations made in the program. If u contains only
+the hot and cold temperatures the algebraic definition of the fouling expression is used. This is
+the case when the true dataset is generated. If it also contains the fouling, the fouling rate is instead
+defined to be predicted by the neural network. The energy balance includes the convective and advective heat transfer
+terms but neglects conduction.
+
+# Arguments
+- `du::AbstractVector{Float64}`: Pre-allocated derivative vector updated in-place
+- `u::AbstractVector{Float64}`: Current state vector containing fouling and temperatures 
+- `p::NamedTuple`: Parameter tuple
+- `t::Float64`: Current time of the simulation
+
+# Returns
+- `nothing`: The function operates in place to avoid memory allocation
+"""
 function EnergyBalance!(du,u,p,t)
     #Defining Discretisation
     @views Th = u[1:p.N]

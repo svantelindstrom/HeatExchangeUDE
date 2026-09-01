@@ -1,4 +1,19 @@
 using HeatExchangeUDE
+"""
+    run_prediction()
+
+Runs scripts to generate prediction and plot results 
+
+This function predicts the entire test set using the weights from the trained Neural Network and plots
+a heat map of the errors, an interactive plot showing the prediction and true data, and a plot
+of the training and test percentage errors.
+
+# Arguments
+- `nothing`: This function requires no input.
+
+# Returns
+- `nothing`: The result of this functions is three plots.
+"""
 function run_prediction()
     _,optim_params,_ = load_NN_results()
     Th_ground_truth,Tc_ground_truth,tsteps,N,L,_ = load_true()
@@ -14,8 +29,8 @@ function run_prediction()
     
     println("Mean Accuracy: ",accuracy,"%")
 
-    #trained_model_heatmap(Th_error,Tc_error,tsteps,N,L)
+    trained_model_heatmap(Th_error,Tc_error,tsteps,N,L)
     interactive_temperature_profile(Th_model, Tc_model, Th_ground_truth, Tc_ground_truth, Lvec, tsteps)
-    training_vs_test_plot(spacial_avg_errors,tsteps)
-
+    p = training_vs_test_plot(spacial_avg_errors,tsteps)
+    display(p)
 end

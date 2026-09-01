@@ -5,6 +5,26 @@ using Optimization, OptimizationOptimisers, OptimizationOptimJL, Zygote, Enzyme
 using Optimisers, Optim
 using DrWatson, JLD2
 
+"""
+    LossOptim(lossFunc,p;max_iters_adam::Int=1000,learn_rate=0.001,max_iters_BFGS::Int=500)
+
+Uses Adam and LBFGS dual optimisation to minimise training loss.
+
+Yhis function uses the loss closure to define an optimisation problem which is optimised by Adam
+before using the final trained Adam parameters to define a problem for LBFGS to optimise. 
+
+# Arguments 
+- `lossFunc::Function`: Function used to calculate the training loss for the optimisation.
+- `p::NamedTuple`: Parameter tuple.
+- `max_iters_adam::Int`: Number of epochs for the Adam optimisation stage. Defaults to 1000.
+- `learn_rate::Float64`: Adam learning rate.
+- `max_iters_BFGS::Int`: Number of epochs for the LFBGS optimisation stage. Defaults to 500.
+
+# Returns
+- `adam::NamedTuple`: Neural network weights and biases after the adam optimisation step.
+- `LBFGS::NamedTuple`: Final neural network weights and biases after the LBFGS optimisation step.
+- `history::Vector{Float64}`: History of loss over the epochs of the optimisation.
+"""
 function LossOptim(lossFunc,p;max_iters_adam::Int=1000,learn_rate=0.001,max_iters_BFGS::Int=500)
 
     losses = Float64[]
@@ -29,6 +49,17 @@ function LossOptim(lossFunc,p;max_iters_adam::Int=1000,learn_rate=0.001,max_iter
     return (adam=adam_weights,LBFGS=LBFGS_weights,history = losses)
 end
 
+"""
+    run_training()
+
+Runs the training loop for the neural network.
+
+# Arguments
+- `nothing`: This function takes no input.
+
+# Returns
+- `nothing`: This function has no output, the training results are saved to a .jld2 data file.
+"""
 function run_training()
     #Defining hyperparameters of Neural Network
     hidden_layers = 1

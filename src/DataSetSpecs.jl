@@ -1,3 +1,38 @@
+"""
+    pVecBuilder(;R,model=nothing,θ=nothing,st=nothing,kwargs...)
+
+Constructs a NamedTuple containing all important parameters.
+
+Takes some input arguments and calculates some parameters such as cross sectional area etc.
+
+# Required Keyword Arguments
+- `R::Function`: Function defining fouling behaviour
+
+# Optional Keyword Arguments
+**Neural Network and Training**
+- `model`: The Lux network architecture. Defaults to nothing.
+- `θ::ComponentArrays{Float64}`: Neural network weights and biases. Defaults to nothing.
+- `st::NamedTuple`: Neural network state. Defaults to nothing.
+- `δ::Float64`: Noise level of true data and threshold parameter of Pseudo-Huber loss. Defaults to 1.0.
+- `λ::Float64`: L2 regularisation penalty weight. Defaults to 0.0.
+
+*Physical & Geometric:**
+- `R0::Float64`: Asymptotic fouling resistance constant. Defaults to 0.002.
+- `beta::Float64`: Fouling deposition rate constant. Defaults to 1e-6.
+- `T_h_in::Float64`: Inlet temperature of the hot fluid (°C). Defaults to 90.0.
+- `T_c_in::Float64`: Inlet temperature of the cold fluid (°C). Defaults to 20.0.
+- `r::Float64`: Radius of the inner pipe (m). Defaults to 0.025.
+- `L::Float64`: Total length of the heat exchanger (m). Defaults to 20.0.
+- `N::Int`: Number of spatial discretization nodes. Defaults to 10.
+
+**Simulation Time:**
+- `final_time::Float64`: Total simulation time (s). Defaults to 3e6.
+- `time_points::Int`: Number of discrete data points to save. Defaults to 30.
+- `τ::Float64`: Normalization time constant. Defaults to `final_time`.
+
+# Returns
+- `NamedTuple`: A consolidated parameter object containing all inputs alongside dynamically calculated geometric and thermodynamic constants.
+"""
 function pVecBuilder(;
     R,
     model = nothing,

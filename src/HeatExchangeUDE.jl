@@ -32,5 +32,6 @@ module HeatExchangeUDE
     include(scriptsdir("Plotting.jl"))
     export training_vs_test_plot
     export interactive_temperature_profile
+    export trained_model_heatmap
 
 end
