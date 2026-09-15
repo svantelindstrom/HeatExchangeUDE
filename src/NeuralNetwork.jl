@@ -35,7 +35,7 @@ function define_NN(hidden_layers::Int,nodes_per_layer::Int;input_dims::Int = 3,o
 end
 
 """
-    R_NN(Th,Tc,R,p)
+    R_NN!(Th,Tc,R,p,dR)
 
 Using Neural Network inside the energy balance ODE to predict fouling rate.
 
@@ -45,7 +45,7 @@ and placed into a matrix for input into the neural network. To ensure positivity
 without restriction of the fouling rate to be positive the derivative is split up to an accumulation
 and removal rate. The removal rate is multiplied by a tanh term which approaches 0 as the fouling 
 approaches 0. Hence if the fouling is 0 positivity of the derivative is ensured using the
-softplus function.
+softplus function.  
 
 # Arguments 
 - `Th::Matrix{Float64}`: Hot temperature of true dataset
@@ -54,26 +54,28 @@ softplus function.
 - `p::NamedTuple`: Parameter tuple containing physical parameters and neural network states and weights
 
 # Returns
-- `vec(dR_pred.*p.dR_max)::Vector{Float64}`: Normalised fouling rate prediction multiplied by maximum fouling rate to get physical rate
+- `nothing`: function operates in place to avoid unnecessary memory allocations  
 """
-function R_NN(Th,Tc,R,p)
-    norm_Th = Th./p.Th_max
-    norm_Tc = Tc./p.Tc_max
-    norm_R = R./p.R_max 
+    function R_NN!(Th,Tc,R,p,dR_pred)
+        norm_Th_tmp = get_tmp(p.norm_Th, Th)
+        norm_Tc_tmp = get_tmp(p.norm_Tc, Tc)
+        norm_R_tmp  = get_tmp(p.norm_R, R)
+        input_NN_tmp = get_tmp(p.input_NN, Th)
 
-    input_NN = vcat(reshape(norm_Th, 1, :), reshape(norm_Tc, 1, :),reshape(norm_R,1, :))
+        @. norm_Th_tmp = Th / p.Th_max
+        @. norm_Tc_tmp = Tc / p.Tc_max
+        @. norm_R_tmp  = R / p.R_max
 
-    dR_pred,_ = p.model(input_NN,p.θ,p.st)
+        input_NN_tmp[1, :] .= vec(norm_Th_tmp)
+        input_NN_tmp[2, :] .= vec(norm_Tc_tmp)
+        input_NN_tmp[3, :] .= vec(norm_R_tmp)
 
-    dR_pred = vec(dR_pred)
-    
-    pos_dR = softplus.(dR_pred)
-    neg_dR = softplus.(-dR_pred)
+        output_NN,_ = p.model(input_NN_tmp,p.θ,p.st)
+        dR_pred .= vec(output_NN)
+        @. dR_pred = (softplus(dR_pred) - softplus(-dR_pred)*tanh(max(0.0,norm_R_tmp)/p.ϵ)) * p.dR_max
+        return nothing
+    end
 
-    dR_pred = pos_dR .- neg_dR.*tanh.(max.(0.0,norm_R)./p.ϵ)
-    
-    return vec(dR_pred.*p.dR_max)
-end
 
 """
     setup_NN(hidden_layers::Int,nodes_per_layer::Int)

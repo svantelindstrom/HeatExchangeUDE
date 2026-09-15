@@ -74,7 +74,7 @@ function run_training()
 
     #Constructing parameter tuple
     p = pVecBuilder(
-        R = R_NN,
+        R = R_NN!,
         model = NN,
         θ=θ,
         st=st,

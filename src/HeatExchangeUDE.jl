@@ -10,7 +10,7 @@ module HeatExchangeUDE
     include("NeuralNetwork.jl")
     export define_NN
     export setup_NN
-    export R_NN
+    export R_NN!
 
     include("LossGradients.jl")
     export loss_function

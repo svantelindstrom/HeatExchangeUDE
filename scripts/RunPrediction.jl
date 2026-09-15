@@ -25,10 +25,11 @@ function run_prediction()
     
     save_NN_prediction(Th_model,Tc_model,"1.0_noisy_prediction_test_data")
 
-    Th_error,Tc_error,accuracy,spacial_avg_errors = prediction_error(Th_ground_truth,Tc_ground_truth,Th_model,Tc_model,tsteps)
+    Th_error,Tc_error,accuracy,spacial_avg_errors,mean_error = prediction_error(Th_ground_truth,Tc_ground_truth,Th_model,Tc_model,tsteps)
     
     println("Mean Accuracy: ",accuracy,"%")
-
+    println("Mean Error: ",mean_error,"K")
+    
     trained_model_heatmap(Th_error,Tc_error,tsteps,N,L)
     interactive_temperature_profile(Th_model, Tc_model, Th_ground_truth, Tc_ground_truth, Lvec, tsteps)
     p = training_vs_test_plot(spacial_avg_errors,tsteps)

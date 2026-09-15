@@ -34,7 +34,7 @@ function UDE_predict(θ,tsteps,Th,Tc)
 
     #Build Parameter Vector
     p = pVecBuilder(
-        R=R_NN,
+        R=R_NN!,
         model=NN,
         θ=θ,
         st=st,
@@ -74,10 +74,15 @@ over all time steps to give the percentage accuracy of the model.
 - `Tc_error::Matrix{Float64}`: Errors in the cold stream
 - `mean_accuracy::Float64`: average accuracy of the models prediction
 - `spacial_avg_errors::Vector{Float64}`: Spacial average error at each time step
+- `error_mean::Float64`: Average error of the model's prediction in Kelvin
 """
 function prediction_error(Th_ground_truth,Tc_ground_truth,Th_model,Tc_model,tsteps)
-    Th_error = 100*abs.(Th_model.-Th_ground_truth)./(Th_ground_truth.+273.15)
-    Tc_error = 100*abs.(Tc_model.-Tc_ground_truth)./(Tc_ground_truth.+273.15)
+    Th_error_abs = abs.(Th_model.-Th_ground_truth)
+    Tc_error_abs = abs.(Tc_model.-Tc_ground_truth)
+
+    Th_error = 100*Th_error_abs./(Th_ground_truth.+273.15)
+    Tc_error = 100*Tc_error_abs./(Tc_ground_truth.+273.15)
+    
 
     spacial_avg_errors = Float64[]
 
@@ -87,7 +92,8 @@ function prediction_error(Th_ground_truth,Tc_ground_truth,Th_model,Tc_model,tste
         push!(spacial_avg_errors,mean(vcat(current_Th_error,current_Tc_error)))
     end
 
-    error_mean = mean(vcat(Th_error,Tc_error))
-    mean_accuracy = 100-error_mean
-    return Th_error,Tc_error,mean_accuracy,spacial_avg_errors
+    error_mean = mean(vcat(Th_error_abs,Tc_error_abs))
+    percentage_error_mean = mean(vcat(Th_error,Tc_error))
+    mean_accuracy = 100-percentage_error_mean
+    return Th_error,Tc_error,mean_accuracy,spacial_avg_errors,error_mean
 end
