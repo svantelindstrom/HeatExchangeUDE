@@ -19,6 +19,9 @@ terms but neglects conduction.
 - `nothing`: The function operates in place to avoid memory allocation
 """
 function EnergyBalance!(du,u,p,t)
+    U = get_tmp(p.U, u)
+    Q = get_tmp(p.Q, u)
+
     #Defining Discretisation
     @views Th = u[1:p.N]
     @views Tc = u[p.N+1:2*p.N]
@@ -30,25 +33,18 @@ function EnergyBalance!(du,u,p,t)
     else
         #R is a state variable and prediction of the fouling rate is based on the value of R
         @views R = u[2*p.N+1:3*p.N]
-
-        dR_dt = p.R(Th,Tc,R,p)
-
-        @views du[2*p.N+1:3*p.N] = dR_dt
+        @views dR_view = du[2*p.N+1:3*p.N]
+        p.R(Th,Tc,R,p,dR_view)
     end
 
-    U = 1.0 ./ (1.0/p.U0 .+ R)
-    Q = U.*p.P.*(Th .- Tc)
+    @. U = 1.0 / (1.0/p.U0 + R)
+    @. Q = U*p.P*(Th - Tc)
 
-<<<<<<< Updated upstream
     #Defining the ODE's:
-    @views du[2:p.N] .= -p.v_h.*((Th[2:p.N].-Th[1:p.N-1])./p.dx) .- Q[2:p.N] ./(p.rho_h*p.cp_h*p.S)
-    @views du[p.N+1:2*p.N-1] .= p.v_c.*((Tc[2:p.N].-Tc[1:p.N-1])./p.dx) .+ Q[1:p.N-1] ./(p.rho_c*p.cp_c*p.S)
-=======
-    #Defining convective advective energy balances:
+    # Explicit broadcasting instead of @. 
     @views du[2:p.N] .= -p.v_h .* ((Th[2:p.N] .- Th[1:p.N-1]) .* p.inv_dx) .- Q[2:p.N] .* p.inv_convective_coefficient_hot
     @views du[p.N+1:2*p.N-1] .= p.v_c .* ((Tc[2:p.N] .- Tc[1:p.N-1]) .* p.inv_dx) .+ Q[1:p.N-1] .* p.inv_convective_coefficient_cold
->>>>>>> Stashed changes
     
-    du[1] = -p.v_h*((Th[1]-p.T_h_in)/p.dx) - Q[1]/(p.rho_h*p.cp_h*p.S)
-    du[2*p.N] = p.v_c*((p.T_c_in-Tc[p.N])/p.dx) + Q[p.N]/(p.rho_c*p.cp_c*p.S)
+    du[1] = -p.v_h*((Th[1]-p.T_h_in)*p.inv_dx) - Q[1] * p.inv_convective_coefficient_hot
+    du[2*p.N] = p.v_c*((p.T_c_in-Tc[p.N])*p.inv_dx) + Q[p.N] * p.inv_convective_coefficient_cold
 end
