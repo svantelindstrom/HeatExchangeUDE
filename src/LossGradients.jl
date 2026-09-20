@@ -37,7 +37,7 @@ function loss_function(p_base,u0,tspan,tsteps,ground_truth_data)
         end
 
         prob = ODEProblem(ODE_Wrapper!, u0,tspan,current_θ)
-        sol = solve(prob,Rodas5P(),saveat=tsteps, sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))
+        sol = solve(prob,Rodas5P(autodiff=AutoFiniteDiff()),saveat=tsteps, sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))
 
         if sol.retcode != SciMLBase.ReturnCode.Success
             return Inf
