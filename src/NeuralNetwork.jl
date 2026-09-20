@@ -1,6 +1,22 @@
-using Lux, StableRNGs, ComponentArrays
+using Lux, StableRNGs, ComponentArrays,NNlib
 
-#Create NeuralNetwork definition based on size defined by modeltraining.jl
+"""
+    define_NN(hidden_layers::Int,nodes_per_layer::Int;input_dims::Int=3,output_dims::Int=1)
+
+Defines the neural network object using Lux.jl.
+
+Creates the neural network based on the nodes per layer and the hidden layer arguments. For stable
+training the final layers weights and biases are zero initialised.
+
+# Arguments
+- `hidden_layers::Int`: The number of hidden layers in the network architecture
+- `nodes_per_layer::Int`: The number of nodes in every hidden layer
+- `input_dims::Int`: Input dimensions to the first layer. Defaults to 3 with hot and cold temperatures and the fouling 
+- `output_dims::Int`: Dimensions outputted by final layer. Defaults to 1, predicting the fouling rate
+
+# Returns
+- `Chain(layers...)::Chain{NamedTuple}`: A Lux.jl chain storing information about the network architecture as the type NamedTuple
+"""
 function define_NN(hidden_layers::Int,nodes_per_layer::Int;input_dims::Int = 3,output_dims::Int = 1)
     layers = Any[]
 
@@ -18,16 +34,63 @@ function define_NN(hidden_layers::Int,nodes_per_layer::Int;input_dims::Int = 3,o
     return Chain(layers...)
 end
 
-function R_NN(t,Th,Tc,p)
-    states = vcat(reshape(Th, 1, :), reshape(Tc, 1, :))
-    t_arr = [t for _ in 1:1, _ in 1:length(Tc)]
-    input_NN = vcat(states, t_arr)
+"""
+    R_NN!(Th,Tc,R,p,dR)
 
-    R_pred,_ = p.model(input_NN,p.θ,p.st)
-    
-    return vec(R_pred)
-end
+Using Neural Network inside the energy balance ODE to predict fouling rate.
 
+This function takes the current fouling, temperatures and the parameter tuple p and 
+passes these to the neural network to obtain the predicted fouling rate. The input variables are normalised
+and placed into a matrix for input into the neural network. To ensure positivity of the fouling 
+without restriction of the fouling rate to be positive the derivative is split up to an accumulation
+and removal rate. The removal rate is multiplied by a tanh term which approaches 0 as the fouling 
+approaches 0. Hence if the fouling is 0 positivity of the derivative is ensured using the
+softplus function.  
+
+# Arguments 
+- `Th::Matrix{Float64}`: Hot temperature of true dataset
+- `Tc::Matrix{Float64}`: Cold temperature of true dataset
+- `R::Matrix{Float64}`: Fouling 
+- `p::NamedTuple`: Parameter tuple containing physical parameters and neural network states and weights
+
+# Returns
+- `nothing`: function operates in place to avoid unnecessary memory allocations  
+"""
+    function R_NN!(Th,Tc,R,p,dR_pred)
+        norm_Th_tmp = get_tmp(p.norm_Th, Th)
+        norm_Tc_tmp = get_tmp(p.norm_Tc, Tc)
+        norm_R_tmp  = get_tmp(p.norm_R, R)
+        input_NN_tmp = get_tmp(p.input_NN, Th)
+
+        @. norm_Th_tmp = Th / p.Th_max
+        @. norm_Tc_tmp = Tc / p.Tc_max
+        @. norm_R_tmp  = R / p.R_max
+
+        input_NN_tmp[1, :] .= vec(norm_Th_tmp)
+        input_NN_tmp[2, :] .= vec(norm_Tc_tmp)
+        input_NN_tmp[3, :] .= vec(norm_R_tmp)
+
+        output_NN,_ = p.model(input_NN_tmp,p.θ,p.st)
+        dR_pred .= vec(output_NN)
+        @. dR_pred = (softplus(dR_pred) - softplus(-dR_pred)*tanh(max(0.0,norm_R_tmp)/p.ϵ)) * p.dR_max
+        return nothing
+    end
+
+
+"""
+    setup_NN(hidden_layers::Int,nodes_per_layer::Int)
+
+Sets up neural network and converts weights to a ComponentArray
+
+# Arguments 
+- `hidden_layers::Int`: The number of hidden layers in the network architecture
+- `nodes_per_layer::Int`: The number of nodes in every hidden layer
+
+# Returns
+- `NN::Chain{NamedTuple}`: A Lux.jl chain storing information about the network architecture as the type NamedTuple
+- `θ::ComponentArray{Float64}`: Initialised neural network weights
+- `st::NamedTuple`: NamedTuple conatining the neural network states
+"""
 function setup_NN(hidden_layers::Int,nodes_per_layer::Int)
     NN = define_NN(hidden_layers,nodes_per_layer)
 
