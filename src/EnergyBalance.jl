@@ -19,8 +19,10 @@ terms but neglects conduction.
 - `nothing`: The function operates in place to avoid memory allocation
 """
 function EnergyBalance!(du,u,p,t)
-    U = get_tmp(p.U, u)
-    Q = get_tmp(p.Q, u)
+    promoted_val = u[1]+t
+
+    U = get_tmp(p.U, promoted_val)
+    Q = get_tmp(p.Q, promoted_val)
 
     #Defining Discretisation
     @views Th = u[1:p.N]
