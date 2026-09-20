@@ -5,6 +5,8 @@
 ![Lux.jl](https://img.shields.io/badge/Lux.jl-Neural_Networks-orange?style=flat-square)
 ![DrWatson](https://img.shields.io/badge/DrWatson-Reproducibility-success?style=flat-square)
 
+A physics informed model using the Universal Differential Equation (UDE) architecture to predict heat exchanger fouling rates from sparse noisy data. Embedding the neural network into a convective-advective energy balance creates a model which has a high sample efficiency, increased extrapolation accuracy and guarantees thermodynamic consistency. 
+
 ## Physical System
 <p align="center">
    <img src="plots/true_fouling_animation.gif" alt="True Solution " width="600"/>
@@ -43,7 +45,7 @@ Using a neural network, the underlying fouling patterns can be learned and appli
   <em>Figure 2: Model Prediction Compared to True Dataset. Resolution: 10 Spacial Nodes, 30 Timesteps</em>
 </p>
 
-A universal differential equation (UDE), embeds a neural network into a differential equation. In this case the neural network predicts the rate of fouling inside the energy balance. This ensures that the physics of the system is enforced. Unlike a physics informed neural network which uses the physical equation in the loss function and approximates the entire behaviour which, if training fails, does not guarantee that the physics are followed. The UDE architecture allows for a neural network with few parameters which can be trained on a considerably smaller datasets than traditional convoluted neural networks. As the prediction follows the physical model the extrapolatory ability of UDE's can be highly accurate even without a regularisation in the loss function.
+A universal differential equation (UDE), embeds a neural network into a differential equation. In this case the neural network predicts the rate of fouling inside the energy balance. This ensures that the physics of the system is enforced. Unlike a physics informed neural network which uses the physical equation in the loss function and approximates the entire behaviour which, if training fails, does not guarantee that the physics are followed. The UDE architecture allows for a neural network with few parameters which can be trained on a considerably smaller datasets than traditional convolutional neural networks. As the prediction follows the physical model the extrapolatory ability of UDE's can be highly accurate even without a regularisation in the loss function.
 
 ## Results
 <p align="center">
@@ -57,6 +59,13 @@ The results above were generated with a gaussian random error with standard devi
 The ratio of mean test error to the mean training error is 1.0 meaning the test and training accuracy are equal for this dataset.  
 
 To ensure that the random noise is not overexaggerated from squaring and that the minimum point has a smooth second derivative for the LBFGS optimisation step, a pseudo huber loss function with a $\delta$ parameter equal to the standard deviation of the gaussian noise (1.0K) is minimised.   
+
+## Future Work
+To ensure the model is production ready the following work is being planned and structured:
+- Deterministic unit testing of array dimensionality and gradient flow integrity
+- Testing suite to ensure fouling remains strictly non-negative regardless of model input
+- Stress test model with more severe and varied forms of noise (random spikes, sensor drift etc.)
+- Train model on real operational heat exchanger data
 
 ## Reproducability
 This code base is using the [Julia Language](https://julialang.org/) and
@@ -78,4 +87,36 @@ To (locally) reproduce this project, do the following:
 
 This will install all necessary packages for you to be able to run the scripts and
 everything should work out of the box, including correctly finding local paths.
+
+To operate the program follow the instructions below (given that you have activated the project as above):
+
+2. To generate datasets, open a Julia console and do:
+   ```
+   julia> using DrWatson
+   julia> include(scriptsdir("DataGeneration.jl"))
+   julia> GenerateTrainingTestData()
+   ```
+
+3. To train the model on the dataset you generated:
+   ```
+   julia> using DrWatson
+   julia> include(scriptsdir("ModelTraining.jl"))
+   julia> run_training()
+   ```
+
+4. To obtain the UDE prediction of the final trained parameters:
+   ```
+   julia> using DrWatson
+   julia> include(scriptsdir("RunPrediction.jl"))
+   julia> run_prediction()
+   ```
+
+## Repository Structure
+```text
+├── src/               # Core UDE architecture, loss functions, and physics models
+├── scripts/           # Training loops, data generation, and plotting scripts
+├── plots/             # Generated visualizations (GIFs, SVGs)
+├── Project.toml       # Julia environment dependencies (DrWatson managed)
+└── test/              # Unit tests and physical constraint checks
+```
 
