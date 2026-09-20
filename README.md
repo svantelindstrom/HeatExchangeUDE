@@ -5,7 +5,9 @@
 ![Lux.jl](https://img.shields.io/badge/Lux.jl-Neural_Networks-orange?style=flat-square)
 ![DrWatson](https://img.shields.io/badge/DrWatson-Reproducibility-success?style=flat-square)
 
-A physics informed model using the Universal Differential Equation (UDE) architecture to predict heat exchanger fouling rates from sparse noisy data. Embedding the neural network into a convective-advective energy balance creates a model which has a high sample efficiency, increased extrapolation accuracy and guarantees thermodynamic consistency. 
+A physics informed model using the Universal Differential Equation (UDE) architecture to predict heat exchanger fouling rates from sparse noisy data. Embedding the neural network into a convective-advective energy balance creates a model which has a high sample efficiency, increased extrapolation accuracy and guarantees thermodynamic consistency.
+
+For a comprehensive walkthrough of the mathematics and architecture please see the interactive [Pluto.jl Notebook](/notebooks/HeatExchangeUDE_Notebook.html).
 
 ## Physical System
 <p align="center">
@@ -117,6 +119,7 @@ To operate the program follow the instructions below (given that you have activa
 ├── scripts/           # Training loops, data generation, and plotting scripts
 ├── plots/             # Generated visualizations (GIFs, SVGs)
 ├── Project.toml       # Julia environment dependencies (DrWatson managed)
-└── test/              # Unit tests and physical constraint checks
+├── test/              # Unit tests and physical constraint checks
+└── notebooks/         # Pluto.jl interactive notebook
 ```
 
