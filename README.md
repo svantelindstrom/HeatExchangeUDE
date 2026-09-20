@@ -7,7 +7,7 @@
 
 A physics informed model using the Universal Differential Equation (UDE) architecture to predict heat exchanger fouling rates from sparse noisy data. Embedding the neural network into a convective-advective energy balance creates a model which has a high sample efficiency, increased extrapolation accuracy and guarantees thermodynamic consistency.
 
-For a comprehensive walkthrough of the mathematics and architecture please see the interactive [Pluto.jl Notebook](/notebooks/HeatExchangeUDE_Notebook.html).
+For a comprehensive walkthrough of the mathematics and architecture please see the interactive [Pluto.jl Notebook](https://svantelindstrom.github.io/HeatExchangeUDE/notebooks/HeatExchangeUDE_Notebook.html).
 
 ## Physical System
 <p align="center">

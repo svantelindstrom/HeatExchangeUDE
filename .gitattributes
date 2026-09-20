@@ -3,6 +3,7 @@
 #
 # Use this file on every device where git development is done.
 
+*.html linguist-generated=true
 
 ###
 ### Auto detect text files and perform LF normalization

@@ -8,9 +8,9 @@ data/exp_raw/*
 data/sims/*
 plots/*
 test/*
+notebooks/*
 
 /videos
-/notebooks
 /_research
 
 #Whitelisted .gitkeep files to ensure data and plot folders show up in github repo
@@ -18,6 +18,11 @@ test/*
 !data/exp_raw/.gitkeep
 !data/sims/.gitkeep
 !plots/.gitkeep
+!notebooks/.gitkeep
+!plots/true_fouling_animation.gif
+!plots/model_fouling_animation.gif
+!plots/trainingtestplot.svg
+!/notebooks/HeatExchangeUDE_Notebook.html
 
 ################################################################################
 #                                    Julia                                     #
